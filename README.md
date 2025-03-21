@@ -57,6 +57,7 @@ This is a **TypeScript Language Service Plugin** that enforces custom “TypeCON
    ```
 
 5. **Check** your editor’s Problems panel or run `tsc` to see the plugin’s diagnostics.
+6. **Restart TS Server** open the command pallete and run TypeScript: Restart TS Server, so the plugin can start working.
 
 ## Example
 

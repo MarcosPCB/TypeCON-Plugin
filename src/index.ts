@@ -206,6 +206,26 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                 return false;
             }
 
+            function returnClassExtension(node: ts.ClassDeclaration): string | undefined {
+                if (!node.name) return undefined;
+                const nameText = node.name.text;
+                if (nameText === "CActor" || nameText === "CEvent") return nameText;
+
+                // or check extends: e.g. "class Foo extends CActor"
+                if (node.heritageClauses) {
+                    for (const clause of node.heritageClauses) {
+                        for (const type of clause.types) {
+                            const t = checker.getTypeAtLocation(type.expression);
+                            if (t.symbol?.name === "CActor" || t.symbol?.name === "CEvent") {
+                                return t.symbol?.name;
+                            }
+                        }
+                    }
+                }
+
+                return undefined;
+            }
+
             // G. Check if a property type is IAction, IMove, or IAi
             function isAllowedActionType(type: ts.Type): boolean {
                 const name = type.symbol?.name;
@@ -411,11 +431,25 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                 // - NO other variables, functions, or statements
 
                 // (A) For each member:
+                let foundMain = false;
                 for (const member of cls.members) {
                     // If it's a constructor, let's check its body
                     if (ts.isConstructorDeclaration(member)) {
                         checkCActorCEventConstructor(member);
                     }
+
+                    if(ts.isMethodDeclaration(member)) {
+                        if((member.name.getText() == 'Main' && returnClassExtension(cls) == 'CActor')
+                        || ((member.name.getText() == 'Append' || member.name.getText() == 'Prepend')
+                        && returnClassExtension(cls) == 'CEvent'))
+                            foundMain = true;
+                    }
+                }
+
+                if(!foundMain) {
+                    if(returnClassExtension(cls) == 'CActor')
+                        pushDiagnostic(cls, `Missing Main method at CActor class`);
+                    else pushDiagnostic(cls, `Missing Append or Prepend method at CEvent class`);
                 }
             }
 
