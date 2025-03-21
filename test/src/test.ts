@@ -1,4 +1,4 @@
-import '../defs/TCSet100/types';
+import '../../src/include/TCSet100/types';
 
 type wow = {
     name: number,
