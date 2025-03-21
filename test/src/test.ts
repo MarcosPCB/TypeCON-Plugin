@@ -169,9 +169,5 @@ class displayRest extends CEvent {
         }
 
         const y = obj.low[1].ball;
-
-        CON(`
-qputs 9999 FUCK ME
-quote 9999`);
     }
 }

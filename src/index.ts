@@ -127,6 +127,8 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
             function isAllowedConstantArgument(expr: ts.Expression): boolean {
                 // 1) If it's a numeric literal like `42`
                 if (ts.isNumericLiteral(expr)) {
+                    if(expr.text.includes('.'))
+                        pushDiagnostic(expr, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
                     return true;
                 }
 
@@ -302,6 +304,11 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             if (!paramSym) return;
                             const paramType = checker.getTypeOfSymbolAtLocation(paramSym, node);
 
+                            if(ts.isNumericLiteral(arg)) {
+                                if(arg.text.includes('.'))
+                                    pushDiagnostic(arg, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
+                            }
+
                             // A) If param is typed as 'constant', ensure it's a numeric literal
                             if (paramIsConstant(paramSym, node)) {
                                 if (!isAllowedConstantArgument(arg)) {
@@ -368,6 +375,10 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             // If it's allocated with new, or array literal [], or Array() with no args
                             const init = node.initializer;
                             if (init) {
+                                if(ts.isNumericLiteral(init)) {
+                                    if(init.text.includes('.'))
+                                        pushDiagnostic(init, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
+                                }
                                 if (ts.isNewExpression(init)) {
                                     // new Something()
                                     trackAllocation(sym, node);

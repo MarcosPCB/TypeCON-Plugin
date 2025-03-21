@@ -4,6 +4,7 @@
 
 "typecon_plugin@file:.":
   version "0.0.1"
+  resolved "file:"
   dependencies:
     typescript "^5.8.2"
 
