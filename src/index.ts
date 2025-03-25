@@ -309,6 +309,11 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                                     pushDiagnostic(arg, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
                             }
 
+                            if(ts.isStringLiteral(arg)) {
+                                if(arg.text.length > 128)
+                                    pushDiagnostic(arg, `String cannot be longer than 128 chracters`, ts.DiagnosticCategory.Warning);
+                            }
+
                             // A) If param is typed as 'constant', ensure it's a numeric literal
                             if (paramIsConstant(paramSym, node)) {
                                 if (!isAllowedConstantArgument(arg)) {
@@ -327,7 +332,7 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             const declSym = checker.getSymbolAtLocation(decl.name ?? decl);
 
                             if (declSym) {
-                                if (declSym.name === "CON") {
+                                if (declSym.name === "CON" || declSym.name == 'CONUnsafe') {
                                     // Expect 1 arg that must be a string literal in "CON" language
                                     if (node.arguments.length !== 1) {
                                         pushDiagnostic(node, `CON(...) requires exactly 1 argument.`);
@@ -378,6 +383,10 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                                 if(ts.isNumericLiteral(init)) {
                                     if(init.text.includes('.'))
                                         pushDiagnostic(init, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
+                                }
+                                if(ts.isStringLiteral(init)) {
+                                    if(init.text.length > 128)
+                                        pushDiagnostic(init, `String cannot be longer than 128 chracters`, ts.DiagnosticCategory.Warning);
                                 }
                                 if (ts.isNewExpression(init)) {
                                     // new Something()
