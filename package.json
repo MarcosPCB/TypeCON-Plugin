@@ -1,19 +1,19 @@
 {
   "name": "typecon_plugin",
-  "version": "0.0.1",
-  "description": "TypeCON's plugin for helping with the rules and limitations with sintaxes",
+  "version": "0.6.",
+  "description": "TypeCON's plugin for helping with the rules and limitations.",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "build-test": "tsc && yarn add --dev file:."
+    "build-test": "tsc && yarn upgrade file:."
   },
   "author": "ItsMarcos",
   "license": "MIT",
   "dependencies": {
-    "typecon": "file:../TypeCON",
-    "typescript": "^5.8.2"
   },
   "devDependencies": {
-    "typecon_plugin": "file:."
+    "typecon": "file:../TypeCON",
+    "typecon_plugin": "file:.",
+    "typescript": "^5.8.2"
   }
 }
