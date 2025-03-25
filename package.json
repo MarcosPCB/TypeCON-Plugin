@@ -1,6 +1,6 @@
 {
   "name": "typecon_plugin",
-  "version": "0.6.",
+  "version": "0.6.0",
   "description": "TypeCON's plugin for helping with the rules and limitations.",
   "main": "./dist/index.js",
   "scripts": {

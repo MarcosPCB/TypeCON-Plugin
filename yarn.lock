@@ -3,7 +3,7 @@
 
 
 "typecon_plugin@file:.":
-  version "0.6."
+  version "0.6.0"
   resolved "file:"
 
 "typecon@file:../TypeCON":
