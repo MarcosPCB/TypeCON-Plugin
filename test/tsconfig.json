@@ -1,7 +1,9 @@
 {
     "compilerOptions": {
       "plugins": [
-        { "name": "typecon_plugin" }
+        { "name": "typecon_plugin",
+          "configOptions": true
+        }
       ],
       "strict": true
     },

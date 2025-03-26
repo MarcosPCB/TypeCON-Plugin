@@ -2,18 +2,6 @@
 # yarn lockfile v1
 
 
-"typecon_plugin@file:.":
-  version "0.6.0"
-  resolved "file:"
-
-"typecon@file:../TypeCON":
-  version "0.0.1"
-  resolved "file:../TypeCON"
-  dependencies:
-    fs-extra "^11.3.0"
-    inquirer "^12.5.0"
-    ts-morph "^25.0.1"
-
 typescript@^5.8.2:
   version "5.8.2"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.8.2.tgz"

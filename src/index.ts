@@ -1,7 +1,7 @@
 // src/index.ts
 import * as ts from 'typescript';
 import { parseCONCode } from './CONParser'; // or wherever your parser lives
-// @typecon
+
 /**
  * Plugin initialization function:
  */

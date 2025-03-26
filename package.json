@@ -1,19 +1,24 @@
 {
   "name": "typecon_plugin",
   "version": "0.6.0",
-  "description": "TypeCON's plugin for helping with the rules and limitations.",
-  "main": "./dist/index.js",
+  "description": "TypeCON's plugin VS Code to help with the rules and limitations of TypeCON.",
+  "main": "dist/index.js",
+  "contributes": {
+    "typescript.tsserverPlugins": [
+      {
+        "module": "./dist/index.js",
+        "config": {}
+      }
+    ]
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json",
     "build-test": "tsc && yarn upgrade file:."
   },
   "author": "ItsMarcos",
   "license": "MIT",
-  "dependencies": {
-  },
+  "repository": "https://github.com/MarcosPCB/TypeCON-Plugin",
   "devDependencies": {
-    "typecon": "file:../TypeCON",
-    "typecon_plugin": "file:.",
     "typescript": "^5.8.2"
   }
 }
