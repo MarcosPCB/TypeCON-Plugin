@@ -127,7 +127,7 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
             function isAllowedConstantArgument(expr: ts.Expression): boolean {
                 // 1) If it's a numeric literal like `42`
                 if (ts.isNumericLiteral(expr)) {
-                    if(expr.text.includes('.'))
+                    if (expr.text.includes('.'))
                         pushDiagnostic(expr, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
                     return true;
                 }
@@ -228,10 +228,42 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                 return undefined;
             }
 
+            function getArrayElementType(
+                checker: ts.TypeChecker,
+                type: ts.Type,
+            ): ts.Type | undefined {
+                // Works for both T[] and Array<T>
+                if (checker.isArrayType(type) || checker.isTupleType(type)) {
+                    // pre-4.8 fallback:   checker.getTypeArguments(...)
+                    const typeArgs = checker.getTypeArguments(
+                        type as ts.TypeReference,
+                    );
+                    return typeArgs[0];
+                }
+                return undefined;
+            }
+
+
             // G. Check if a property type is IAction, IMove, or IAi
-            function isAllowedActionType(type: ts.Type): boolean {
-                const name = type.symbol?.name;
-                return name === "IAction" || name === "IMove" || name === "IAi";
+            function isAllowedActionType(
+                type: ts.Type,
+            ): { allowed: boolean; type?: string } {
+                const ALLOWED = new Set(["IAction", "IMove", "IAi"]);
+
+                // plain IAction / IMove / IAi
+                const direct = type.symbol?.getName();
+                if (direct && ALLOWED.has(direct)) {
+                    return { allowed: true, type: direct };
+                }
+
+                // arrays or tuples of the same
+                const elem = getArrayElementType(checker, type);
+                const elemName = elem?.symbol?.getName();
+                if (elemName && ALLOWED.has(elemName)) {
+                    return { allowed: true, type: `${elemName}[]` };
+                }
+
+                return { allowed: false, type: direct };
             }
 
             // H. Track "block scope" references. A simplistic approach:
@@ -304,13 +336,13 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             if (!paramSym) return;
                             const paramType = checker.getTypeOfSymbolAtLocation(paramSym, node);
 
-                            if(ts.isNumericLiteral(arg)) {
-                                if(arg.text.includes('.'))
+                            if (ts.isNumericLiteral(arg)) {
+                                if (arg.text.includes('.'))
                                     pushDiagnostic(arg, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
                             }
 
-                            if(ts.isStringLiteral(arg)) {
-                                if(arg.text.length > 128)
+                            if (ts.isStringLiteral(arg)) {
+                                if (arg.text.length > 128)
                                     pushDiagnostic(arg, `String cannot be longer than 128 chracters`, ts.DiagnosticCategory.Warning);
                             }
 
@@ -380,12 +412,12 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             // If it's allocated with new, or array literal [], or Array() with no args
                             const init = node.initializer;
                             if (init) {
-                                if(ts.isNumericLiteral(init)) {
-                                    if(init.text.includes('.'))
+                                if (ts.isNumericLiteral(init)) {
+                                    if (init.text.includes('.'))
                                         pushDiagnostic(init, `Decimal values are not allowed`, ts.DiagnosticCategory.Error);
                                 }
-                                if(ts.isStringLiteral(init)) {
-                                    if(init.text.length > 128)
+                                if (ts.isStringLiteral(init)) {
+                                    if (init.text.length > 128)
                                         pushDiagnostic(init, `String cannot be longer than 128 chracters`, ts.DiagnosticCategory.Warning);
                                 }
                                 if (ts.isNewExpression(init)) {
@@ -458,16 +490,16 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                         checkCActorCEventConstructor(member);
                     }
 
-                    if(ts.isMethodDeclaration(member)) {
-                        if((member.name.getText() == 'Main' && returnClassExtension(cls) == 'CActor')
-                        || ((member.name.getText() == 'Append' || member.name.getText() == 'Prepend')
-                        && returnClassExtension(cls) == 'CEvent'))
+                    if (ts.isMethodDeclaration(member)) {
+                        if ((member.name.getText() == 'Main' && returnClassExtension(cls) == 'CActor')
+                            || ((member.name.getText() == 'Append' || member.name.getText() == 'Prepend')
+                                && returnClassExtension(cls) == 'CEvent'))
                             foundMain = true;
                     }
                 }
 
-                if(!foundMain) {
-                    if(returnClassExtension(cls) == 'CActor')
+                if (!foundMain) {
+                    if (returnClassExtension(cls) == 'CActor')
                         pushDiagnostic(cls, `Missing Main method at CActor class`);
                     else pushDiagnostic(cls, `Missing Append or Prepend method at CEvent class`);
                 }
@@ -504,10 +536,11 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                             const propType = checker.getTypeAtLocation(decl.type);
 
                             // Check if it's one of IAction, IMove, or IAi
-                            if (!isAllowedActionType(propType)) {
+                            const allowed = isAllowedActionType(propType)
+                            if (!allowed.allowed) {
                                 pushDiagnostic(
                                     decl,
-                                    `Only IAction, IMove, or IAi properties are allowed.`
+                                    `Only IAction, IMove, or IAi properties are allowed. Type detected: ${allowed.type}`
                                 );
                             }
                         }
@@ -538,7 +571,7 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
 
             // =============== After the traversal ===============
             // For each tracked variable that was never freed, produce an error
-            for (const [symId, trackData] of memoryTracker.entries()) {
+            /*for (const [symId, trackData] of memoryTracker.entries()) {
                 if (!trackData.freed) {
                     const varNameNode = trackData.node.name;
                     pushDiagnostic(
@@ -546,7 +579,7 @@ function init({ typescript: tsModule }: { typescript: typeof ts }) {
                         `Memory allocated for '${varNameNode.getText()}' was never freed (no 'delete' or 'Free()' call).`
                     );
                 }
-            }
+            }*/
 
             // Return the combination of TS diagnostics + our custom diagnostics
             return [...priorDiagnostics, ...customDiagnostics];
